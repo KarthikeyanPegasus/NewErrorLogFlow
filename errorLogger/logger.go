@@ -16,9 +16,15 @@ type Error struct {
 }
 
 type Info struct {
-	AppName    string `json:"app_name"`
-	Event      string `json:"event"`
-	StackTrace string `json:"stack_trace"`
+	AppName    string       `json:"app_name"`
+	Event      string       `json:"event"`
+	StackTrace string       `json:"stack_trace"`
+	CustomInfo []CustomInfo `json:"custom_info"`
+}
+
+type CustomInfo struct {
+	Name  string `json:"name"`
+	Value any    `json:"value"`
 }
 
 type UserError struct {
@@ -60,10 +66,17 @@ func getCustomReason(appname, event, reason string, errorCode int) string {
 }
 
 func (l *Logger) LogError(err *Error) {
+	customInfo := make([]zap.Field, 0)
+	for _, info := range err.Information.CustomInfo {
+		customInfo = append(customInfo, zap.Any(info.Name, info.Value))
+	}
 	l.l.Error(getCustomReason(err.Information.AppName, err.Information.Event, err.Description, err.ErrorCode),
-		zap.String("description", err.Description),
-		zap.String("app_name", err.Information.AppName),
-		zap.String("stack_trace", err.Information.StackTrace))
+		append([]zap.Field{
+			zap.String("description", err.Description),
+			zap.String("app_name", err.Information.AppName),
+			zap.String("stack_trace", err.Information.StackTrace),
+		}, customInfo...)...,
+	)
 }
 
 func NewError(errorCode int, reason, description, appName, event string) *Error {

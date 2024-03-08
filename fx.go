@@ -14,6 +14,7 @@ import (
 	database "main/database"
 	logger "main/errorLogger"
 	"main/middlewares"
+	"main/post"
 	"main/users"
 	"net/http"
 	"os"
@@ -33,6 +34,7 @@ var module = fx.Options(
 	middlewares.Module,
 	logger.Module,
 	users.Module,
+	post.Module,
 	Router.Handler,
 	fx.Invoke(RunServer),
 )
